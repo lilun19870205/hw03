@@ -44,8 +44,14 @@ class Node(object) :
 
     def intersections(self, r) :
         norm=np.sqrt((self.x-r.origin.x)**2+(self.y-r.origin.y)**2)
-        if (self.x-r.origin.x)/norm==r.direction.x and \
+        if (norm==0):
+            result=1
+        elif (self.x-r.origin.x)/norm==r.direction.x and \
         (self.y-r.origin.y)/norm==r.direction.y:
+            result=1
+        else:
+            result=0
+        return result
             
             
         """Where does the node intersect the ray?"""
@@ -79,6 +85,7 @@ class Operator(Node) :
         return pointsL + pointsR
       
 # INSERT UNION AND INTERSECTION CLASSES
+class Union()
         
 class Surface(object) :
     
