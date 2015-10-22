@@ -1,5 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.optimize import fsolve
+import math
+from sympy.solvers.polysys import solve_triangulated
+from sympy.abc import x, y, z
 
 class Point(object) :
 
@@ -30,28 +34,28 @@ class Ray(object) :
                (self.origin.x, self.origin.y, self.direction.x, self.direction.y)
 
 class Node(object) :
-    def __init__(self,x,y):
-        self.x,self.y = x,y
+    def __init__(self,x):
+        self.x=x
     
     def contains(self, p) :
-        if self.x == p.x and self.y == p.y:
-            print "true,it is contained"
-        else:
-            print "false, it is not contained"
-            
-        """Does the node contain the point?"""
-#        raise NotImplementedError
-
-    def intersections(self, r) :
-        norm=np.sqrt((self.x-r.origin.x)**2+(self.y-r.origin.y)**2)
-        if (norm==0):
-            result=1
-        elif (self.x-r.origin.x)/norm==r.direction.x and \
-        (self.y-r.origin.y)/norm==r.direction.y:
+        if (self.x.f(p))<=0:
             result=1
         else:
             result=0
         return result
+            
+        """Does the node contain the point?"""
+#        raise NotImplementedError
+
+
+
+    def intersections(self, r) :
+        def equations(p):
+            x,y=p
+            return (self.A*x**2+self.B*y**2+self.C*x*y+self.D*x +self.E*y+self.F, (x-r.origin.x)*r.direction.y-(y-r.origin.y)*r.direction.x)
+        x,y= fsolve(equations,(0,0))
+
+        return equations((x,y))
             
             
         """Where does the node intersect the ray?"""
@@ -85,27 +89,77 @@ class Operator(Node) :
         return pointsL + pointsR
       
 # INSERT UNION AND INTERSECTION CLASSES
-class Union()
+class Union(Node):
+    def __init__(self,L,R):
+        self.L,self.R=L,R
+    def contains(self,p):
+        pointsL = self.L.contains(p)
+        pointsR = self.R.contains(p)
+        if (pointsL + pointsR)>=1:
+            print "true"
+            result=1
+        else:
+            print "false"
+            result=0
+        return result
         
+class Intersection(Node):
+    def __init__(self,L,R):
+        self.L,self.R=L,R
+    def contains(self,p):
+        pointsL = self.L.contains(p)
+        pointsR = self.R.contains(p)
+        if (pointsL + pointsR)==2:
+            print "true"
+            result=1
+        else:
+            print "false"
+            result=0
+        return result
+
+
 class Surface(object) :
+    def __init__(self, A, B, C, D, E, F):
+        self.A,self.B,self.C,self.D,self.E,self.F=A,B,C,D,E,F
     
     def f(self, p) :
-        raise NotImplementedError
+        function=self.A*p.x**2+self.B*p.y**2+self.C*p.x*p.y+self.D*p.x +self.E*p.y+self.F
+        return function
+    
+    def string(self):
+        string='self.A*x**2+self.B*y**2+self.C*x*y+self.D*x +self.E*y+self.F'
+        return string
         
     def intersections(self, r) :
-        raise NotImplementedError
+        def equations(p):
+            x,y=p
+            return (self.A*x**2+self.B*y**2+self.C*x*y+self.D*x +self.E*y+self.F, (x-r.origin.x)*r.direction.y-(y-r.origin.y)*r.direction.x)
+        x,y= fsolve(equations,(0,0))
+
+        return x,y
+#    def intersections(self, r) :
+
         
         
 class QuadraticSurface(Surface) :
     
-    def __init__(self, A=0.0, B=0.0, C=0.0, D=0.0, E=0.0, F=0.0) :
-        pass
+    def __init__(self, A, B, C, D, E, F) :
+        self.A,self.B,self.C,self.D,self.E,self.F=A,B,C,D,E,F
     
     def intersections(self, r) :
         pass
         
     def f(self, p) :
-        pass
+        function=self.A*p.x**2+self.B*p.y**2+self.C*p.x*p.y+self.D*p.x +self.E*p.y+self.F
+        return function
+
+class PlaneV(object):
+    def __init__(self, a):
+        self.a=a
+        
+    def f(self,p):
+        function=self.a-p.x
+        return function
                
 
                
