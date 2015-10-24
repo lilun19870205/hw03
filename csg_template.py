@@ -2,8 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
 import math
-from sympy.solvers.polysys import solve_triangulated
-from sympy.abc import x, y, z
 
 class Point(object) :
 
@@ -210,8 +208,14 @@ class Plane(object):
         return function
 
 class Circle(object):
-    def __init__(self,r,a,b):
-        self.r,self.a,self.b=r,a,b
+    def __init__(self,r,a=.0,b=.0):
+        super(Circle,self).__init__(A=0,B=0,C=0,D=0,E=0,F=0)
+        self.r=r
+        self.a=a
+        self.b=b
+        self.A=1.0
+        self.B=1.0
+        
     def f(self,p):
         function=(p.x-self.a)**2+(p.y-self.b)**2-self.r**2
         return function
@@ -241,7 +245,9 @@ class Region(object) :
           
     
     def intersections(self, r) :
-        pass
+        ints=self.node.intersections(r)
+        ints.sort(key= lambda p: p.x)
+        return ints
         
 class Geometry(object) :
     
