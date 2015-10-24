@@ -50,16 +50,15 @@ class Node(object) :
 
 
     def intersections(self, r) :
-        def equations(p):
-            x,y=p
-            return (self.A*x**2+self.B*y**2+self.C*x*y+self.D*x +self.E*y+self.F, (x-r.origin.x)*r.direction.y-(y-r.origin.y)*r.direction.x)
-        x,y= fsolve(equations,(0,0))
+        if (self.x.intersections(r))>=0:
+            print "true"
+            result=1
+        else:
+            print "false"
+            result=0
+        return result
 
-        return equations((x,y))
             
-            
-        """Where does the node intersect the ray?"""
-        raise NotImplementedError
 
 class Primitive(Node) :
     
@@ -130,13 +129,28 @@ class Surface(object) :
         string='self.A*x**2+self.B*y**2+self.C*x*y+self.D*x +self.E*y+self.F'
         return string
         
+    def contains(self,p):
+        if self.f(p)<=0:
+            result=1
+        else:
+            result=0
+        return result
+            
+        
     def intersections(self, r) :
-        def equations(p):
-            x,y=p
-            return (self.A*x**2+self.B*y**2+self.C*x*y+self.D*x +self.E*y+self.F, (x-r.origin.x)*r.direction.y-(y-r.origin.y)*r.direction.x)
-        x,y= fsolve(equations,(0,0))
+        M=np.array([[2*self.A,self.C,self.D],[self.C,2*self.B,self.E],[self.D,self.E,2*self.F]])
+        r0t=np.array([r.origin.x,r.origin.y,1.])
+        r0=r0t.transpose()
+        dt=np.array([r.direction.x,r.direction.y,1.])
+        d=dt.transpose()
+        
+        a=dt.dot(M).dot(d)
+        b=2*r0t.dot(M).dot(d)
+        c=r0t.dot(M).dot(r0)
+        print a, b, c
+        
 
-        return x,y
+        return b**2-4*a*c
 #    def intersections(self, r) :
 
         
@@ -146,21 +160,61 @@ class QuadraticSurface(Surface) :
     def __init__(self, A, B, C, D, E, F) :
         self.A,self.B,self.C,self.D,self.E,self.F=A,B,C,D,E,F
     
-    def intersections(self, r) :
-        pass
-        
     def f(self, p) :
         function=self.A*p.x**2+self.B*p.y**2+self.C*p.x*p.y+self.D*p.x +self.E*p.y+self.F
         return function
+    
+        
+    def intersections(self, r) :
+        M=np.array([[2*self.A,self.C,self.D],[self.C,2*self.B,self.E],[self.D,self.E,2*self.F]])
+        r0t=np.array([r.origin.x,r.origin.y,1.])
+        r0=r0t.transpose()
+        dt=np.array([r.direction.x,r.direction.y,1.])
+        d=dt.transpose()
+        
+        a=dt.dot(M).dot(d)
+        b=2*r0t.dot(M).dot(d)
+        c=r0t.dot(M).dot(r0)
+        print a, b, c
+        
+        if (b**2-4*a*c)>=0:
+            print "intersection is true"
+            result=1
+        else:
+            print "intersection is false"
+            result=0
+        
+        return result
 
 class PlaneV(object):
     def __init__(self, a):
         self.a=a
         
     def f(self,p):
-        function=self.a-p.x
+        function=p.x-self.a
         return function
-               
+        
+class PlaneH(object):
+    def __init__(self,a):
+        self.a=a
+        
+    def f(self,p):
+        function=p.y-self.a
+        return function
+
+class Plane(object):
+    def __init__(self,m,b):
+        self.m,self.b=m,b
+    def f(self,p):
+        function=self.m*p.x-p.y+self.b
+        return function
+
+class Circle(object):
+    def __init__(self,r,a,b):
+        self.r,self.a,self.b=r,a,b
+    def f(self,p):
+        function=(p.x-self.a)**2+(p.y-self.b)**2-self.r**2
+        return function
 
                
 class Region(object) :
@@ -177,7 +231,15 @@ class Region(object) :
         else :
             O = Union if operation == "U" else Intersection
             self.node = O(self.node, node)
+            
+    def contains(self,p):
+        if self.node.contains(p)==1:
+            result=1
+        else:
+            result=0
+        return result
           
+    
     def intersections(self, r) :
         pass
         
